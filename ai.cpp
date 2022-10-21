@@ -1,5 +1,13 @@
 #include <iostream>
 
+inline int pop_count_ull(uint64_t x){
+    x = x - ((x >> 1) & 0x5555555555555555ULL);
+    x = (x & 0x3333333333333333ULL) + ((x >> 2) & 0x3333333333333333ULL);
+    x = (x + (x >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
+    x = (x * 0x0101010101010101ULL) >> 56;
+    return x;
+}
+
 struct Flip {
     uint64_t flip;
     uint_fast8_t pos;
@@ -45,6 +53,10 @@ class Board {
                 res.flip |= get_flip_part(shifts[i], masks[i / 2], x);
             return res;
         }
+
+        int evaluate(){
+            return evaluate_one_player(player) - evaluate_one_player(opponent);
+        }
     
     private:
         uint64_t enhanced_shift(uint64_t a, int b) {
@@ -78,6 +90,24 @@ class Board {
                 f = 0ULL;
             return f;
         }
+
+        int evaluate_one_player(uint64_t p){
+            // from https://uguisu.skr.jp/othello/5-1.html
+            #define N_WEIGHT 6
+            constexpr int cell_weight_score[N_WEIGHT] = {30, -12, 0, -1, -3, -15};
+            constexpr uint64_t cell_weight_mask[N_WEIGHT] = {
+                0b10000001'00000000'00000000'00000000'00000000'00000000'00000000'10000001ULL,
+                0b01000010'10000001'00000000'00000000'00000000'00000000'10000001'01000010ULL,
+                0b00100100'00000000'10100101'00000000'00000000'10100101'00000000'00100100ULL,
+                0b00011000'00000000'00011000'10111101'10111101'00011000'00000000'00011000ULL,
+                0b00000000'00111100'01000010'01000010'01000010'01000010'00111100'00000000ULL,
+                0b00000000'01000010'00000000'00000000'00000000'00000000'01000010'00000000ULL
+            };
+            int res = 0;
+            for (int i = 0; i < N_WEIGHT; ++i)
+                res += cell_weight_score[i] * pop_count_ull(p & cell_weight_mask[i]);
+            return res;
+        }
 };
 
 inline void bit_print_board(uint64_t x){
@@ -87,14 +117,6 @@ inline void bit_print_board(uint64_t x){
             std::cerr << std::endl;
     }
     std::cerr << std::endl;
-}
-
-inline int pop_count_ull(uint64_t x){
-    x = x - ((x >> 1) & 0x5555555555555555ULL);
-    x = (x & 0x3333333333333333ULL) + ((x >> 2) & 0x3333333333333333ULL);
-    x = (x + (x >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
-    x = (x * 0x0101010101010101ULL) >> 56;
-    return x;
 }
 
 inline uint_fast8_t ntz(uint64_t *x){

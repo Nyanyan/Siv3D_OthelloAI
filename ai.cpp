@@ -68,6 +68,13 @@ class Board {
         int evaluate(){
             return evaluate_one_player(player) - evaluate_one_player(opponent);
         }
+
+        int get_score(){
+            int p = pop_count_ull(player);
+            int o = pop_count_ull(opponent);
+            int v = 64 - p - o;
+            return p > o ? p - o + v : p - o - v;
+        }
     
     private:
         uint64_t enhanced_shift(uint64_t a, int b) {
@@ -139,6 +146,8 @@ int nega_alpha(Board board, int depth, int alpha, int beta, bool passed) {
         return board.evaluate();
     uint64_t legal = board.get_legal();
     if (legal == 0ULL) {
+        if (passed)
+            return board.get_score();
         board.pass();
         return -nega_alpha(board, depth, -beta, -alpha, true);
     }

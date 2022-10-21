@@ -1,5 +1,7 @@
 #include <iostream>
 
+#define SCORE_MAX 1000000
+
 inline int pop_count_ull(uint64_t x){
     x = x - ((x >> 1) & 0x5555555555555555ULL);
     x = (x & 0x3333333333333333ULL) + ((x >> 2) & 0x3333333333333333ULL);
@@ -7,6 +9,11 @@ inline int pop_count_ull(uint64_t x){
     x = (x * 0x0101010101010101ULL) >> 56;
     return x;
 }
+
+struct AI_result {
+    int pos;
+    int val;
+};
 
 struct Flip {
     uint64_t flip;
@@ -52,6 +59,10 @@ class Board {
             for (int i = 0; i < 8; ++i)
                 res.flip |= get_flip_part(shifts[i], masks[i / 2], x);
             return res;
+        }
+
+        void pass(){
+            std::swap(player, opponent);
         }
 
         int evaluate(){
@@ -110,8 +121,67 @@ class Board {
         }
 };
 
-inline void bit_print_board(uint64_t x){
-    for (uint32_t i = 0; i < 64; ++i){
+inline uint_fast8_t ntz(uint64_t *x) {
+    return pop_count_ull((~(*x)) & ((*x) - 1));
+}
+
+inline uint_fast8_t first_bit(uint64_t *x) {
+    return ntz(x);
+}
+
+inline uint_fast8_t next_bit(uint64_t *x) {
+    *x &= *x - 1;
+    return ntz(x);
+}
+
+int nega_alpha(Board board, int depth, int alpha, int beta, bool passed) {
+    if (depth == 0)
+        return board.evaluate();
+    uint64_t legal = board.get_legal();
+    if (legal == 0ULL) {
+        board.pass();
+        return -nega_alpha(board, depth, -beta, -alpha, true);
+    }
+    Flip flip;
+    for (uint_fast8_t cell = first_bit(&legal); legal; cell = next_bit(&legal)) {
+        flip = board.get_flip(cell);
+        board.move(flip);
+            alpha = std::max(alpha, -nega_alpha(board, depth - 1, -beta, -alpha, false));
+        board.undo(flip);
+        if (beta <= alpha)
+            break;
+    }
+    return alpha;
+}
+
+AI_result ai(Board board, int depth){
+    AI_result res = {-1, -SCORE_MAX};
+    uint64_t legal = board.get_legal();
+    if (legal == 0ULL) {
+        std::cerr << "[ERROR] no legal move" << std::endl;
+        return res;
+    }
+    int v;
+    Flip flip;
+    for (uint_fast8_t cell = first_bit(&legal); legal; cell = next_bit(&legal)) {
+        flip = board.get_flip(cell);
+        board.move(flip);
+            v = -nega_alpha(board, depth - 1, -SCORE_MAX, -res.val, false);
+        board.undo(flip);
+        if (res.val < v){
+            res.pos = cell;
+            res.val = v;
+        }
+    }
+    return res;
+}
+
+
+
+
+
+inline void bit_print_board(uint64_t x) {
+    for (uint32_t i = 0; i < 64; ++i) {
         std::cerr << (1 & (x >> (63 - i)));
         if (i % 8 == 7)
             std::cerr << std::endl;
@@ -119,31 +189,41 @@ inline void bit_print_board(uint64_t x){
     std::cerr << std::endl;
 }
 
-inline uint_fast8_t ntz(uint64_t *x){
-    return pop_count_ull((~(*x)) & ((*x) - 1));
+Board input_board(){
+    Board res;
+    char elem;
+    int player;
+    std::cin >> player;
+    res.player = 0;
+    res.opponent = 0;
+    for (int i = 0; i < 64; ++i){
+        std::cin >> elem;
+        if (elem == '0'){
+            if (player == 0)
+                res.player |= 1ULL << (63 - i);
+            else
+                res.opponent |= 1ULL << (63 - i);
+        } else if (elem == '1'){
+            if (player == 1)
+                res.player |= 1ULL << (63 - i);
+            else
+                res.opponent |= 1ULL << (63 - i);
+        }
+    }
+    return res;
 }
 
-inline uint_fast8_t first_bit(uint64_t *x){
-    return ntz(x);
-}
 
-inline uint_fast8_t next_bit(uint64_t *x){
-    *x &= *x - 1;
-    return ntz(x);
+std::string idx_to_coord(int idx){
+    int y = 7 - idx / 8;
+    int x = 7 - idx % 8;
+    const std::string x_coord = "abcdefgh";
+    return x_coord[x] + std::to_string(y + 1);
 }
 
 int main() {
-    Board board;
-    board.player = 0x0000000800000000ULL;
-    board.opponent = 0x002A9C141C480004ULL;
-    uint64_t legal = board.get_legal();
-    bit_print_board(legal);
-    std::cerr << "flip" << std::endl;
-    for (uint_fast8_t cell = first_bit(&legal); legal; cell = next_bit(&legal)){
-        std::cerr << "cell" << std::endl;
-        bit_print_board(1ULL << cell);
-        Flip flip = board.get_flip(cell);
-        bit_print_board(flip.flip);
-    }
+    Board board = input_board();
+    AI_result result = ai(board, 10);
+    std::cerr << idx_to_coord(result.pos) << " " << result.val << std::endl;
     return 0;
 }

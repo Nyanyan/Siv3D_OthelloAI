@@ -1,11 +1,11 @@
 # シンプルなオセロAI | Simple Othello AI
 
-|               |                                               |
-| :------------ | :-------------------------------------------- |
-| Author        | [山名琢翔](https://twitter.com/takuto_yamana) |
-| Affiliation   | 筑波大学                                      |
-| Siv3D Version | v0.6.5                                        |
-| Platform      | Windows                                       |
+|               |                                  |
+| :------------ | :------------------------------- |
+| Author        | [山名琢翔](https://nyanyan.dev/) |
+| Affiliation   | 筑波大学                         |
+| Siv3D Version | v0.6.5                           |
+| Platform      | Windows                          |
 
 ## 説明 | Description
 

@@ -25,7 +25,7 @@
 
 ### 世界最強のオセロAI
 
-この「シンプルなオセロAI」ではありませんが、OpenSiv3Dを使用して自作の世界最強オセロAI [Egaroucid](https://www.egaroucid-app.nyanyan.dev/)をGUIから動かせるようにしました。オセロAIやアプリとしての完成度はこちらよりも格段に高いです。
+この「シンプルなオセロAI」ではありませんが、OpenSiv3Dを使用して自作の世界最強オセロAI [Egaroucid](https://www.egaroucid-app.nyanyan.dev/)をGUIから動かせるようにしました。オセロAIやアプリとしての完成度は「シンプルなオセロAI」よりも格段に高いです。
 
 
 

@@ -339,7 +339,7 @@ void Main() {
 	Window::Resize(window_size);
 	Window::SetStyle(WindowStyle::Sizable);
 	Scene::SetResizeMode(ResizeMode::Virtual);
-	Window::SetTitle(U"Siv3D サンプル オセロAI");
+	Window::SetTitle(U"シンプルなオセロAI");
 	Scene::SetBackground(Color(36, 153, 114));
 	const Font font{ FontMethod::MSDF, 50 };
 	const Font font_bold{ FontMethod::MSDF, 50, Typeface::Bold };
@@ -352,9 +352,7 @@ void Main() {
 	while (System::Update()) {
 		// 終了ボタンが押されたらAIを強制終了してからExitする
 		if (System::GetUserActions() & UserAction::CloseButtonClicked) {
-			if (ai_future.valid()) {
-				stop_calculating(&ai_future);
-			}
+			stop_calculating(&ai_future);
 			System::Exit();
 		}
 
@@ -376,7 +374,7 @@ void Main() {
 		}
 
 		// 設定などのGUI
-		SimpleGUI::Slider(U"先読み{}手"_fmt(round(depth)), depth, 1, 11, Vec2{ 470, 10 }, 150, 150); // 読み手数
+		SimpleGUI::Slider(U"先読み{}手"_fmt(round(depth)), depth, 1, 9, Vec2{ 470, 10 }, 150, 150); // 読み手数
 		// 対局開始
 		if (SimpleGUI::Button(U"AI先手(黒)で対局", Vec2(470, 60))) {
 			stop_calculating(&ai_future);

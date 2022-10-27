@@ -3,7 +3,7 @@
 #include <future>
 #include <chrono>
 
-#define SCORE_MAX 1000000
+#define SCORE_MAX 64
 
 inline int pop_count_ull(uint64_t x) {
 	x = x - ((x >> 1) & 0x5555555555555555ULL);
@@ -74,7 +74,15 @@ public:
 	}
 
 	int evaluate() {
-		return evaluate_one_player(player) - evaluate_one_player(opponent);
+		constexpr int cell_weight_score[10] = { 2714, 147, 69, -18, -577, -186, -153, -379, -122, -169 };
+		constexpr uint64_t cell_weight_mask[10] = {0x8100000000000081ULL, 0x4281000000008142ULL, 0x2400810000810024ULL, 0x1800008181000018ULL, 0x0042000000004200ULL, 
+			0x0024420000422400ULL, 0x0018004242001800ULL, 0x0000240000240000ULL, 0x0000182424180000ULL, 0x0000001818000000ULL};
+		int res = 0;
+		for (int i = 0; i < 10; ++i)
+			res += cell_weight_score[i] * (pop_count_ull(player & cell_weight_mask[i]) - pop_count_ull(opponent & cell_weight_mask[i]));
+		res += res > 0 ? 128 : (res < 0 ? -128 : 0);
+		res /= 256;
+		return std::max(-SCORE_MAX, std::min(SCORE_MAX, res));
 	}
 
 	int get_score() {
@@ -115,23 +123,6 @@ private:
 		if (!flipped)
 			f = 0ULL;
 		return f;
-	}
-
-	int evaluate_one_player(uint64_t p) {
-		// from https://uguisu.skr.jp/othello/5-1.html
-		constexpr int cell_weight_score[6] = { 30, -12, 0, -1, -3, -15 };
-		constexpr uint64_t cell_weight_mask[6] = {
-			0b10000001'00000000'00000000'00000000'00000000'00000000'00000000'10000001ULL,
-			0b01000010'10000001'00000000'00000000'00000000'00000000'10000001'01000010ULL,
-			0b00100100'00000000'10100101'00000000'00000000'10100101'00000000'00100100ULL,
-			0b00011000'00000000'00011000'10111101'10111101'00011000'00000000'00011000ULL,
-			0b00000000'00111100'01000010'01000010'01000010'01000010'00111100'00000000ULL,
-			0b00000000'01000010'00000000'00000000'00000000'00000000'01000010'00000000ULL
-		};
-		int res = 0;
-		for (int i = 0; i < 6; ++i)
-			res += cell_weight_score[i] * pop_count_ull(p & cell_weight_mask[i]);
-		return res;
 	}
 };
 
@@ -321,7 +312,7 @@ void Main() {
 	Rich_board board;
 	double depth = 5;
 	int value = 0;
-	int ai_player = -1;
+	int ai_player = 1;
 	std::future<AI_result> ai_future;
 
 	while (System::Update()) {
@@ -336,7 +327,7 @@ void Main() {
 				interact_move(&board);
 			}
 		}
-		SimpleGUI::Slider(U"先読み{}手"_fmt(round(depth)), depth, 1, 13, Vec2{ 470, 10 }, 150, 150);
+		SimpleGUI::Slider(U"先読み{}手"_fmt(round(depth)), depth, 1, 11, Vec2{ 470, 10 }, 150, 150);
 		if (SimpleGUI::Button(U"AI先手(黒)で対局", Vec2(470, 60))) {
 			stop_calculating(&ai_future);
 			board.reset();
